@@ -81,21 +81,24 @@
         src: ./authorized_keys_file.conf
         dest: /etc/ssh/sshd_config.d/authorized_keys_file.conf
 
-    # For each service, generate an SSH key pair used for cloning git repos
-    # and deploying over SSH
-    - name: Create deploy key for each app
-      command: "ssh-keygen -o -a 100 -t ed25519 -f /home/deploy/.ssh/{{ item }}.id_ed25519 -N ''"
-      become: yes
-      become_user: deploy
-      args:
-        creates: "/home/deploy/.ssh/{{ item }}.id_ed25519"
-      loop: "{{ apps }}"
+    # # For each service, generate an SSH key pair used for cloning git repos
+    # # and deploying over SSH
+    # - name: Create deploy key for each app
+    #   command: "ssh-keygen -o -a 100 -t ed25519 -f /home/deploy/.ssh/{{ item }}.id_ed25519 -N ''"
+    #   become: yes
+    #   become_user: deploy
+    #   args:
+    #     creates: "/home/deploy/.ssh/{{ item }}.id_ed25519"
+    #   loop: "{{ apps }}"
 
     # Update SSH authorized keys to allow the deploy user to run the deploy script
     # over SSH for each service (called deploy-<service>.sh).
     # See ./update-authorized-keys.sh
     - name: Allow deploy user to deploy things
       script: "./update-authorized-keys.sh {{ apps|join(' ') }}"
+    # NOTE this will lock you out of an other publickey-based logins
+    # that may have been setup previously! 
+    # Copy or move ~/.ssh/authorized_keys to /etc/ssh/authorized_keys/%u
 
     # - name: Copy general deploy script
     #   copy:
