@@ -3,9 +3,6 @@
   become: yes
   become_user: root
   tasks:
-    # Most of the initial tasks follow the instructions here: https://docs.docker.com/engine/install/ubuntu/
-    # for install Docker Engine on Ubuntu.
-
     # Packages needs to use HTTPS apt repos
     - name: Prepare to add Docker apt repo
       apt:
@@ -18,7 +15,7 @@
 
     - name: Add Docker repo key
       apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
+        url: https://download.docker.com/linux/debian/gpg
         id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
         state: present
 
@@ -27,8 +24,9 @@
     # Docker using a different method.
     - name: Add Docker apt repo
       apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+        repo: deb [arch=amd64] https://download.docker.com/linux/debian bullseye stable
         state: present
+        update_cache: true
 
     - name: Install deployment dependencies (apt)
       apt:
@@ -47,7 +45,7 @@
     # Next tasks install Docker Compose per https://docs.docker.com/compose/install/
     - name: Install Docker Compose
       get_url:
-        url: https://github.com/docker/compose/releases/download/1.26.0/docker-compose-Linux-x86_64
+        url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
         dest: /usr/local/bin/docker-compose
         mode: '0755'
 
@@ -57,7 +55,7 @@
         creates: /usr/bin/docker-compose
 
     - name: Create Docker network
-      command: "docker network create my_services"
+      command: "docker network create spine_ext"
       # Command errors out when the network already exists - ignore
       ignore_errors: yes
 
@@ -99,12 +97,12 @@
     - name: Allow deploy user to deploy things
       script: "./update-authorized-keys.sh {{ apps|join(' ') }}"
 
-    - name: Copy general deploy script
-      copy:
-        src: ./deploy.sh
-        dest: /home/deploy
-        mode: '0770'
-        owner: deploy
+    # - name: Copy general deploy script
+    #   copy:
+    #     src: ./deploy.sh
+    #     dest: /home/deploy
+    #     mode: '0770'
+    #     owner: deploy
 
     - name: Copy app-specific deploy scripts
       template:
